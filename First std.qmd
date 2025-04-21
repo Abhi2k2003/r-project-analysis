@@ -1,0 +1,206 @@
+---
+title: "First std"
+format: pdf
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## No of persons born in 2019 in the Birth registration data (2020-2023)
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(gt)
+library(pander)
+
+process_birth_data <- function(file) {
+  read_csv(file) %>%
+    mutate(
+      DOB = mdy(BIRTH_DATE),
+      DOR = mdy(REG_DATE),
+      Birthyear = year(DOB),
+      Regyear = year(DOR)
+    ) %>%
+    filter(Birthyear == 2019)
+}
+
+files <- c("Birth 2019.csv","Birth 2020.csv","Birth 2021.csv", "Birth 2022.csv", "Birth 2023.csv")
+all_data_2019 <- map_dfr(files, process_birth_data)
+
+
+district_lookup <- tibble(
+  DISTRICT_CODE = 1:14,
+  DISTRICT_NAME = c(
+    "Kasaragod", "Kannur", "Wayanad", "Kozhikkode", "Malappuram", "Palakkad", "Thrissur",
+    "Eranakulam", "Idukki", "Kottayam", "Alappuzha", "Pathanamthitta", "Kollam", "Thiruvananthapuram"
+  )
+)
+
+summary_by_district <- all_data_2019 %>%
+  group_by(DISTRICT_CODE, SEX) %>%
+  summarise(Count = n(), .groups = "drop") %>%
+  left_join(district_lookup, by = "DISTRICT_CODE") %>%
+  select(DISTRICT_CODE, DISTRICT_NAME, SEX, Count) %>%
+  arrange(DISTRICT_CODE, SEX)
+
+summary_by_district %>% 
+  gt() %>% 
+  tab_header(title = "Total Number of People Born in 2019 (Combined Data 2019–2023)")
+
+# Total by sex
+total_by_sex <- all_data_2019 %>%
+  group_by(SEX) %>%
+  summarise(Total = n(), .groups = "drop")
+
+total_by_sex %>% 
+  gt() %>% 
+  tab_header("Total no of peoples born in 2019 (Combined Data 2019–2023)")
+
+male_count <- total_by_sex %>%
+  filter(SEX == 1) %>%
+  pull(Total)
+female_count <- total_by_sex %>%
+  filter(SEX == 2) %>%
+  pull(Total)
+
+Total <- male_count+female_count
+
+pander::pander(Total)
+```
+
+## No of persons dead which has born in 2019 from the death registration data (2020-2023)
+
+```{r}
+## 2023
+
+data <- read_csv("Death 2023.csv")
+
+data %>%
+  names()
+
+data_1 <- data %>% 
+  mutate(
+    DOD = mdy(DEATH_DATE),
+    DOR = mdy(REG_DATE),
+    Deathyear = year(DOD),
+    Regyear = year(DOR)
+    )
+data_1
+
+infant_data <- data_1 %>% 
+  filter(AGE_YEAR %in% c(4))
+
+no_2023 <- infant_data %>%
+  count(AGE_YEAR) 
+
+no_2023
+
+## 2022
+
+data <- read_csv("Death 2022.csv")
+
+data %>%
+  names()
+
+data_1 <- data %>% 
+  mutate(
+    DOD = mdy(DEATH_DATE),
+    DOR = mdy(REG_DATE),
+    Deathyear = year(DOD),
+    Regyear = year(DOR)
+    )
+data_1
+
+infant_data <- data_1 %>% 
+  filter(AGE_YEAR %in% c(3))
+
+no_2022 <- infant_data %>%
+  count(AGE_YEAR)
+
+no_2022
+
+## 2021
+
+data <- read_csv("Death 2021.csv")
+
+data %>%
+  names()
+
+data_1 <- data %>% 
+  mutate(
+    DOD = mdy(DEATH_DATE),
+    DOR = mdy(REG_DATE),
+    Deathyear = year(DOD),
+    Regyear = year(DOR)
+    )
+data_1
+
+infant_data <- data_1 %>% 
+  filter(AGE_YEAR %in% c(2))
+
+no_2021 <- infant_data %>%
+  count(AGE_YEAR)
+
+no_2021
+
+## 2020
+
+data <- read_csv("Death 2020.csv")
+
+data %>%
+  names()
+
+data_1 <- data %>% 
+  mutate(
+    DOD = mdy(DEATH_DATE),
+    DOR = mdy(REG_DATE),
+    Deathyear = year(DOD),
+    Regyear = year(DOR)
+    )
+data_1
+
+infant_data <- data_1 %>% 
+  filter(AGE_YEAR %in% c(1))
+
+no_2020 <- infant_data %>%
+  count(AGE_YEAR)
+
+no_2020
+
+## 2019
+
+data <- read_csv("Death 2019.csv")
+
+data %>%
+  names()
+
+data_1 <- data %>% 
+  mutate(
+    DOD = mdy(DEATH_DATE),
+    DOR = mdy(REG_DATE),
+    Deathyear = year(DOD),
+    Regyear = year(DOR)
+    )
+data_1
+
+infant_data <- data_1 %>% 
+  filter(AGE_YEAR %in% c(0,1))
+
+no_2019 <- infant_data %>%
+  count(AGE_YEAR)
+
+no_2019
+
+total <- no_2019+no_2021+no_2020+no_2022+no_2023
+total %>% 
+  gt()
+```
+
+**Conclusion :**
+
+Total no of children born in 2019 in the combined data of birth registration (2019-2023) = *476026*
+
+Total no of children died which born in 2019 in the combined data of death registration (2019-2023) = *697*
+
+Therefore,the probable no of children could join in 1st standard in 2025 basis on the birth and death registration data (2019-2023) = **475329**
